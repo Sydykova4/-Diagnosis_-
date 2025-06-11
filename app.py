@@ -4,7 +4,7 @@ from PIL import Image
 from torchvision import transforms
 import sys
 import os
-from b0_модель import EyeModel, Config
+
 
 # Добавляем путь к директории с b0_модель.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -13,6 +13,26 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Загрузка модели
 @st.cache_resource
 def load_model():
+    class EyeModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.base_model = timm.create_model("efficientnet_b0", pretrained=True, num_classes=0)
+        self.classes = ['N', 'D', 'G', 'C', 'A', 'H', 'M', 'S']
+
+        for param in self.base_model.blocks[-4:].parameters():
+            param.requires_grad = True
+
+        self.classifier = nn.Sequential(
+            nn.Linear(1280, 512),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(512, config.num_classes)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        features = self.base_model(x)
+        return self.classifier(features)
+        
     try:
         # Инициализация модели с теми же параметрами
         config = Config()
@@ -20,7 +40,7 @@ def load_model():
 
         # Загрузка весов
         checkpoint = torch.load(
-            os.path.join(config.plot_dir, "best_model.pth"),
+            os.path.join("best_model.pth"),
             map_location='cpu',
             weights_only=False
         )
@@ -88,7 +108,7 @@ def main():
                 'C': 'Катаракта',
                 'A': 'Возрастная макулодистрофия',
                 'H': 'Гипертоническая ретинопатия',
-                'M': 'Миопические изменения',
+                'M': 'Миопия',
                 'S': 'Рубец на макуле'
             }
 
