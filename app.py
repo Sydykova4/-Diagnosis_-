@@ -2,45 +2,54 @@ import streamlit as st
 import torch
 from PIL import Image
 from torchvision import transforms
+import torch.nn as nn
+import timm
 import sys
 import os
 
-
 # Добавляем путь к директории с b0_модель.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+
+class Config:
+    def __init__(self):
+        self.num_classes = 8
+        self.plot_dir = "training_plots_b0"
+
+
+config = Config()
 
 
 # Загрузка модели
 @st.cache_resource
 def load_model():
     class EyeModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.base_model = timm.create_model("efficientnet_b0", pretrained=True, num_classes=0)
-        self.classes = ['N', 'D', 'G', 'C', 'A', 'H', 'M', 'S']
+        def __init__(self):
+            super().__init__()
+            self.base_model = timm.create_model("efficientnet_b0", pretrained=True, num_classes=0)
+            self.classes = ['N', 'D', 'G', 'C', 'A', 'H', 'M', 'S']
 
-        for param in self.base_model.blocks[-4:].parameters():
-            param.requires_grad = True
+            for param in self.base_model.blocks[-4:].parameters():
+                param.requires_grad = True
 
-        self.classifier = nn.Sequential(
-            nn.Linear(1280, 512),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(512, config.num_classes)
-        )
+            self.classifier = nn.Sequential(
+                nn.Linear(1280, 512),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(512, config.num_classes)
+            )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        features = self.base_model(x)
-        return self.classifier(features)
-        
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            features = self.base_model(x)
+            return self.classifier(features)
+
     try:
         # Инициализация модели с теми же параметрами
-        config = Config()
         model = EyeModel().to('cpu')
 
         # Загрузка весов
         checkpoint = torch.load(
-            os.path.join("best_model.pth"),
+            os.path.join(config.plot_dir, "best_model.pth"),
             map_location='cpu',
             weights_only=False
         )
