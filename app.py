@@ -4,11 +4,7 @@ from PIL import Image
 from torchvision import transforms
 import torch.nn as nn
 import timm
-import sys
 import os
-
-# Добавляем путь к директории с b0_модель.py
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Config:
