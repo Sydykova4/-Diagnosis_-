@@ -1,0 +1,8 @@
+streamlit
+torch>=2.0.0
+timm
+Pillow
+torchvision
+pandas
+numpy
+scikit-learn
