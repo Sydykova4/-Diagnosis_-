@@ -90,7 +90,7 @@ def main():
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Загруженное изображение", use_column_width=True)
+        st.image(image, caption="Загруженное изображение", use_container_width=True)
 
         model = load_model()
         if model is None:
